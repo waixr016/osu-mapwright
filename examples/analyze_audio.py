@@ -84,12 +84,21 @@ def main(argv: list[str] | None = None) -> int:
         default="auto",
         choices=["auto", "beat_this", "numpy", "librosa"],
     )
+    parser.add_argument(
+        "--model",
+        default="final0",
+        help="Beat This! checkpoint (final0 is the most accurate, ~81 MB)",
+    )
+    parser.add_argument("--device", default="cpu", help="torch device, e.g. cuda")
     parser.add_argument("--meter", type=int, default=4)
     parser.add_argument("--skeleton", action="store_true", help="write a 1/1 test map")
     args = parser.parse_args(argv)
 
     audio = load_audio(args.audio)
-    estimator = get_estimator(args.backend)
+    kwargs = {}
+    if args.backend in ("auto", "beat_this"):
+        kwargs = {"model": args.model, "device": args.device}
+    estimator = get_estimator(args.backend, **kwargs)
     print(f"decoding      {args.audio.name}  ({audio.duration:.1f}s @ {audio.sample_rate} Hz)")
     print(f"backend       {estimator.name}")
 

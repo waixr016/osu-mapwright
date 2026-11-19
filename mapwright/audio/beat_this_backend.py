@@ -36,7 +36,7 @@ class BeatThisEstimator:  # pragma: no cover - requires beat_this + torch
 
     def __init__(
         self,
-        model: str = "small0",
+        model: str = "final0",
         device: str = "cpu",
         meter: int = 4,
         scratch_dir: str | Path = "build",

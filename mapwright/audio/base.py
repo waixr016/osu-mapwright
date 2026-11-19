@@ -196,38 +196,39 @@ def downbeat_phase(
     return int(np.argmax(scores))
 
 
-def get_estimator(name: str = "auto") -> TempoEstimator:
+def get_estimator(name: str = "auto", **kwargs) -> TempoEstimator:
     """Return a tempo estimator by name.
 
     ``"auto"`` prefers Beat This!, then librosa, then the numpy backend.
     Backends are imported lazily so a missing optional dependency only costs
-    the fallback, not an error.
+    the fallback, not an error. Extra keyword arguments go to the backend
+    constructor (e.g. ``model="final0"`` or ``device="cuda"``).
     """
     if name == "numpy":
         from .numpy_backend import NumpyTempoEstimator
 
-        return NumpyTempoEstimator()  # type: ignore[return-value]
+        return NumpyTempoEstimator(**kwargs)  # type: ignore[return-value]
     if name == "librosa":
         from .librosa_backend import LibrosaTempoEstimator
 
-        return LibrosaTempoEstimator()  # type: ignore[return-value]
+        return LibrosaTempoEstimator(**kwargs)  # type: ignore[return-value]
     if name == "beat_this":
         from .beat_this_backend import BeatThisEstimator
 
-        return BeatThisEstimator()  # type: ignore[return-value]
+        return BeatThisEstimator(**kwargs)  # type: ignore[return-value]
     if name != "auto":
         raise ValueError(f"unknown backend: {name!r}")
 
     try:
         from .beat_this_backend import BeatThisEstimator
 
-        return BeatThisEstimator()  # type: ignore[return-value]
+        return BeatThisEstimator(**kwargs)  # type: ignore[return-value]
     except ImportError:
         pass
     try:
         from .librosa_backend import LibrosaTempoEstimator
 
-        return LibrosaTempoEstimator()  # type: ignore[return-value]
+        return LibrosaTempoEstimator(**kwargs)  # type: ignore[return-value]
     except ImportError:
         pass
 

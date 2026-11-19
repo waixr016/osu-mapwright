@@ -75,14 +75,17 @@ python -m unittest discover -s tests -t . -v
 
 | 后端 | 依赖 | 精度 | 说明 |
 |---|---|---|---|
-| `beat_this` | torch + 8–78 MB 模型 | 最好 | 装了就默认使用；直接给出 downbeat |
+| `beat_this` | torch + 81 MB 模型 | 最好 | 装了就默认使用；默认 `final0` 模型，直接给出 downbeat |
 | `librosa` | librosa + soundfile | 中等 | 可选 |
 | `numpy` | 仅 numpy | 尚可 | 兜底，零依赖 |
 
 ```bash
 pip install beat-this
-python examples/analyze_audio.py song.mp3 --backend beat_this
+python examples/analyze_audio.py song.mp3 --backend beat_this --model final0
 ```
+
+有 NVIDIA 显卡时可以加 `--device cuda`（需要 CUDA 版 torch）。实测一首 4 分钟的歌在 CPU 上
+`final0` 推理约 2 秒，所以 GPU 的收益主要在批量处理，单曲不必折腾。
 
 `get_estimator("auto")` 的优先级是 `beat_this → librosa → numpy`，任何后端缺失都只是降级，不会报错。
 

@@ -119,7 +119,8 @@ class TestBeatThisAccuracy(unittest.TestCase):
     def test_musical_loop(self) -> None:
         path = music_track(self.dir / "music.wav", bpm=128.0, bars=8)
         try:
-            estimate = get_estimator("beat_this").estimate(load_audio(path))
+            estimator = get_estimator("beat_this", model="small0")
+            estimate = estimator.estimate(load_audio(path))
         except Exception as error:  # noqa: BLE001 - missing checkpoint, no GPU...
             self.skipTest(f"Beat This! unavailable here: {error}")
 

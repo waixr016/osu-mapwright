@@ -45,12 +45,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("wheels", type=Path)
     parser.add_argument("target", type=Path)
+    parser.add_argument("--only", default=None, help="glob filter, e.g. 'torch-2.14*'")
     args = parser.parse_args(argv)
 
     args.target.mkdir(parents=True, exist_ok=True)
-    files = sorted(args.wheels.glob("*.whl"))
+    pattern = args.only or "*.whl"
+    files = sorted(args.wheels.glob(pattern))
     if not files:
-        raise SystemExit(f"no wheels in {args.wheels}")
+        raise SystemExit(f"no wheels matching {pattern} in {args.wheels}")
 
     for wheel in files:
         count = install(wheel, args.target)
