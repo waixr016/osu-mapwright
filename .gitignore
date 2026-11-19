@@ -23,6 +23,7 @@ build/
 *.flac
 models/
 cache/
+.deps/
 
 # 编辑器
 .vscode/

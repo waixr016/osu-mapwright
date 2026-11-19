@@ -95,6 +95,19 @@ class TestGridValidation(unittest.TestCase):
             grid.ticks(0, 1000, 0)
 
 
+class TestTempoEstimateNormalisation(unittest.TestCase):
+    def test_negative_offset_shifts_whole_beats(self) -> None:
+        estimate = TempoEstimate(bpm=120.0, offset_ms=-5.0, downbeat_phase=0, meter=4)
+        normalised = estimate.normalized()
+        self.assertAlmostEqual(normalised.offset_ms, 495.0)
+        # beat 0 moved one beat later, so the downbeat is now the last beat
+        self.assertEqual(normalised.downbeat_phase, 3)
+
+    def test_positive_offset_is_left_alone(self) -> None:
+        estimate = TempoEstimate(bpm=120.0, offset_ms=250.0, downbeat_phase=2)
+        self.assertIs(estimate.normalized(), estimate)
+
+
 class TestRedLinesFromEstimate(unittest.TestCase):
     def test_constant_tempo_produces_a_single_red_line(self) -> None:
         estimate = TempoEstimate(bpm=128.0, offset_ms=500.0)

@@ -35,7 +35,10 @@ def red_lines_from_estimate(
     if estimate.bpm <= 0:
         raise ValueError("bpm must be positive")
     beat_ms = 60000.0 / estimate.bpm
-    offset = estimate.offset_ms
+    # the grid may start slightly before the audio; push it in whole beats so
+    # the downbeat phase stays aligned
+    normalised = estimate.normalized(0.0)
+    offset = normalised.offset_ms
     if offset < 0:
         offset += beat_ms * math.ceil(-offset / beat_ms)
     return [

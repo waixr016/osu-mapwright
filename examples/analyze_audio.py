@@ -67,7 +67,8 @@ def build_skeleton(estimate, red_lines, audio_path: Path) -> Beatmap:
                 time=time,
                 x=256,
                 y=192,
-                new_combo=index % 4 == 0,
+                # start a combo on every downbeat so the skeleton shows bars
+                new_combo=(index - estimate.downbeat_phase) % 4 == 0,
             )
         )
     beatmap.hit_objects = objects
@@ -78,7 +79,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("audio", type=Path)
     parser.add_argument("-o", "--output", type=Path, default=Path("build"))
-    parser.add_argument("--backend", default="auto", choices=["auto", "numpy", "librosa"])
+    parser.add_argument(
+        "--backend",
+        default="auto",
+        choices=["auto", "beat_this", "numpy", "librosa"],
+    )
     parser.add_argument("--meter", type=int, default=4)
     parser.add_argument("--skeleton", action="store_true", help="write a 1/1 test map")
     args = parser.parse_args(argv)

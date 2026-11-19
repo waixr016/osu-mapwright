@@ -13,8 +13,9 @@ lines) only depends on that dataclass.
 
 from __future__ import annotations
 
+import math
 import wave
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Protocol, Sequence, runtime_checkable
 
@@ -71,6 +72,7 @@ class TempoEstimate:
     beat_times: list[float] = field(default_factory=list)
     duration: float = 0.0
     source: str = "unknown"
+    meter: int = 4
 
     @property
     def beat_length(self) -> float:
@@ -79,6 +81,24 @@ class TempoEstimate:
     def beat_at(self, index: int) -> float:
         """Time (ms) of beat ``index`` counting from the first beat."""
         return self.offset_ms + index * self.beat_length
+
+    def normalized(self, min_offset_ms: float = 0.0) -> "TempoEstimate":
+        """Return a copy whose offset is at least ``min_offset_ms``.
+
+        Shifting the grid by whole beats keeps every beat where it was, so the
+        downbeat phase is rotated by the same amount and stays meaningful.
+        """
+        if self.offset_ms >= min_offset_ms - 1e-9:
+            return self
+        beat = self.beat_length
+        beats = math.ceil((min_offset_ms - self.offset_ms) / beat)
+        shift = beats * beat
+        return replace(
+            self,
+            offset_ms=self.offset_ms + shift,
+            downbeat_phase=(self.downbeat_phase - beats) % self.meter,
+            beat_times=[time + shift for time in self.beat_times],
+        )
 
     def summary(self) -> str:
         return (
@@ -177,18 +197,40 @@ def downbeat_phase(
 
 
 def get_estimator(name: str = "auto") -> TempoEstimator:
-    """Return a tempo estimator.
+    """Return a tempo estimator by name.
 
-    ``"auto"`` prefers librosa when installed, otherwise the numpy backend.
+    ``"auto"`` prefers Beat This!, then librosa, then the numpy backend.
+    Backends are imported lazily so a missing optional dependency only costs
+    the fallback, not an error.
     """
-    if name in ("auto", "librosa"):
-        try:
-            from .librosa_backend import LibrosaTempoEstimator
+    if name == "numpy":
+        from .numpy_backend import NumpyTempoEstimator
 
-            return LibrosaTempoEstimator()  # type: ignore[return-value]
-        except ImportError:
-            if name == "librosa":
-                raise
+        return NumpyTempoEstimator()  # type: ignore[return-value]
+    if name == "librosa":
+        from .librosa_backend import LibrosaTempoEstimator
+
+        return LibrosaTempoEstimator()  # type: ignore[return-value]
+    if name == "beat_this":
+        from .beat_this_backend import BeatThisEstimator
+
+        return BeatThisEstimator()  # type: ignore[return-value]
+    if name != "auto":
+        raise ValueError(f"unknown backend: {name!r}")
+
+    try:
+        from .beat_this_backend import BeatThisEstimator
+
+        return BeatThisEstimator()  # type: ignore[return-value]
+    except ImportError:
+        pass
+    try:
+        from .librosa_backend import LibrosaTempoEstimator
+
+        return LibrosaTempoEstimator()  # type: ignore[return-value]
+    except ImportError:
+        pass
+
     from .numpy_backend import NumpyTempoEstimator
 
     return NumpyTempoEstimator()  # type: ignore[return-value]

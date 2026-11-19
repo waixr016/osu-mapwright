@@ -126,7 +126,7 @@ class NumpyTempoEstimator:
         low_flux = _flux(magnitudes[:, :low_bin])
         phase_in_bar = downbeat_phase(low_flux, fps, beat_times, self.meter)
 
-        return TempoEstimate(
+        estimate = TempoEstimate(
             bpm=float(bpm),
             offset_ms=float(offset_ms),
             downbeat_phase=phase_in_bar,
@@ -135,7 +135,9 @@ class NumpyTempoEstimator:
             beat_times=beat_times,
             duration=audio.duration,
             source=self.name,
+            meter=self.meter,
         )
+        return estimate.normalized()
 
     # -- internals ----------------------------------------------------------
 

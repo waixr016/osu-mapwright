@@ -71,6 +71,21 @@ save(beatmap, "out/Song (mapper) [Hard].osu")
 python -m unittest discover -s tests -t . -v
 ```
 
+## 音频后端
+
+| 后端 | 依赖 | 精度 | 说明 |
+|---|---|---|---|
+| `beat_this` | torch + 8–78 MB 模型 | 最好 | 装了就默认使用；直接给出 downbeat |
+| `librosa` | librosa + soundfile | 中等 | 可选 |
+| `numpy` | 仅 numpy | 尚可 | 兜底，零依赖 |
+
+```bash
+pip install beat-this
+python examples/analyze_audio.py song.mp3 --backend beat_this
+```
+
+`get_estimator("auto")` 的优先级是 `beat_this → librosa → numpy`，任何后端缺失都只是降级，不会报错。
+
 ## 许可
 
 MIT
