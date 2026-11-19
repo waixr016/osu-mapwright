@@ -83,6 +83,86 @@ def _add(buffer: np.ndarray, start: int, sound: np.ndarray) -> None:
     buffer[start:stop] += sound[: stop - start]
 
 
+def structured_track(
+    path: str | Path,
+    *,
+    bpm: float = 120.0,
+    parts: tuple[tuple[int, float], ...] = ((8, 0.10), (8, 0.40), (8, 1.00), (8, 0.15)),
+    sample_rate: int = 22050,
+    seed: int = 5,
+) -> Path:
+    """Music with clear loudness steps, for section-segmentation tests.
+
+    ``parts`` is a list of ``(bars, gain)`` pairs; the same groove is rendered
+    throughout and each part is scaled afterwards, so the only cue the
+    segmenter gets is energy.
+    """
+    rng = np.random.default_rng(seed)
+    beat_s = 60.0 / bpm
+    total_bars = sum(bars for bars, _ in parts)
+    total = int((total_bars * 4 * beat_s + 0.5) * sample_rate)
+    audio = np.zeros(total, dtype=np.float32)
+
+    def at(beat: float) -> int:
+        return int(round(beat * beat_s * sample_rate))
+
+    def kick() -> np.ndarray:
+        t = np.arange(int(0.16 * sample_rate)) / sample_rate
+        freq = 110.0 * np.exp(-t * 26.0) + 42.0
+        return (np.sin(2 * np.pi * freq * t) * np.exp(-t * 16.0) * 0.9).astype(np.float32)
+
+    def snare() -> np.ndarray:
+        t = np.arange(int(0.12 * sample_rate)) / sample_rate
+        noise = rng.normal(0.0, 0.5, len(t)).astype(np.float32)
+        tone = np.sin(2 * np.pi * 190.0 * t) * 0.35
+        return ((noise + tone) * np.exp(-t * 34.0) * 0.7).astype(np.float32)
+
+    def hat() -> np.ndarray:
+        t = np.arange(int(0.04 * sample_rate)) / sample_rate
+        noise = rng.normal(0.0, 0.4, len(t)).astype(np.float32)
+        return (np.diff(noise, prepend=0.0) * np.exp(-t * 90.0) * 0.35).astype(np.float32)
+
+    def tone(freq: float, length: float, amp: float) -> np.ndarray:
+        t = np.arange(int(length * sample_rate)) / sample_rate
+        envelope = np.minimum(1.0, t * 30.0) * np.exp(-t * 2.2)
+        return (np.sin(2 * np.pi * freq * t) * envelope * amp).astype(np.float32)
+
+    kick_sound, snare_sound, hat_sound = kick(), snare(), hat()
+    progression = [55.0, 73.42, 65.41, 82.41]
+
+    for bar in range(total_bars):
+        root = progression[bar % len(progression)]
+        base = bar * 4
+        for beat_in_bar in range(4):
+            beat = base + beat_in_bar
+            _add(audio, at(beat), kick_sound if beat_in_bar in (0, 2) else snare_sound)
+            _add(audio, at(beat), hat_sound * 0.6)
+            _add(audio, at(beat + 0.5), hat_sound)
+            _add(audio, at(beat), tone(root, beat_s * 0.9, 0.5))
+        for ratio in (2.0, 2.52, 3.0):
+            _add(audio, at(base), tone(root * ratio, beat_s * 4.0, 0.16))
+
+    # apply one gain per part so the sections differ only in loudness
+    bar_cursor = 0
+    for bars, gain in parts:
+        first_sample = at(bar_cursor * 4)
+        last_sample = at((bar_cursor + bars) * 4)
+        audio[first_sample:last_sample] *= gain
+        bar_cursor += bars
+
+    peak = float(np.max(np.abs(audio))) or 1.0
+    audio = (audio / peak * 0.9).astype(np.float32)
+
+    target = Path(path)
+    pcm = (audio * 32767.0).astype("<i2")
+    with wave.open(str(target), "wb") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(sample_rate)
+        handle.writeframes(pcm.tobytes())
+    return target
+
+
 def music_track(
     path: str | Path,
     *,

@@ -24,7 +24,7 @@
 |---|---|
 | S1 ✅ | `.osu` 读写 + 数据模型 |
 | S2 ✅ | 音频分析 + 红线 |
-| S3 | 段落切分 + 密度曲线 |
+| S3 ✅ | 段落切分 + 密度曲线 |
 | S4 | 节奏生成 |
 | S5 | 几何 + 滑条 |
 | S6 | 校验闭环 |
@@ -37,6 +37,9 @@
 ```bash
 # 分析一首歌的 BPM / offset / downbeat，并生成一张 1/1 的"测速图"
 python examples/analyze_audio.py song.mp3 --skeleton
+
+# 顺便看段落结构与密度曲线
+python examples/analyze_audio.py song.mp3 --structure
 
 # 生成一张可玩的最小谱面（120 BPM 写死，用于验证格式）
 python examples/make_minimal.py build

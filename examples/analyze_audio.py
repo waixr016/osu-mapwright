@@ -27,7 +27,7 @@ from mapwright.osu import (  # noqa: E402
     Metadata,
     save,
 )
-from mapwright.timing import red_lines_from_estimate, validate  # noqa: E402
+from mapwright.timing import Grid, red_lines_from_estimate, validate  # noqa: E402
 
 SKELETON_BEATS = 64
 
@@ -92,6 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", default="cpu", help="torch device, e.g. cuda")
     parser.add_argument("--meter", type=int, default=4)
     parser.add_argument("--skeleton", action="store_true", help="write a 1/1 test map")
+    parser.add_argument("--structure", action="store_true", help="print the section table")
     args = parser.parse_args(argv)
 
     audio = load_audio(args.audio)
@@ -115,6 +116,19 @@ def main(argv: list[str] | None = None) -> int:
         print("timing warnings:")
         for problem in problems:
             print(f"  - {problem}")
+
+    if args.structure:
+        from mapwright.structure import SectionMap, segment
+
+        grid = Grid([point for point in red_lines if point.uninherited])
+        section_map = SectionMap(segment(audio, grid))
+        print()
+        print("sections:")
+        print(section_map.table())
+        print(
+            f"kiai {section_map.kiai_duration / 1000:.1f}s "
+            f"of {section_map.duration / 1000:.1f}s"
+        )
 
     if not args.skeleton:
         return 0

@@ -84,6 +84,9 @@ class Grid:
         point = self.red_lines[self._section_at_time(time_ms)]
         return 60000.0 / point.beat_length
 
+    def meter_at(self, time_ms: float) -> int:
+        return self.red_lines[self._section_at_time(time_ms)].meter
+
     def beat_length_at(self, time_ms: float) -> float:
         return self.red_lines[self._section_at_time(time_ms)].beat_length
 
