@@ -32,6 +32,30 @@
 
 详见 [docs/DESIGN.md](docs/DESIGN.md) §11。
 
+## 快速开始
+
+```bash
+python examples/make_minimal.py build   # 生成一张可玩的最小谱面
+```
+
+把生成的 `.osu` 连同任意 `song.mp3`、`bg.jpg` 放进 osu! 的 `Songs` 目录，按 `F5` 刷新生效。
+
+读写 API：
+
+```python
+from mapwright.osu import parse, serialize, save
+
+beatmap = parse(open("song.osu", encoding="utf-8").read())
+beatmap.metadata.version = "Hard"
+save(beatmap, "out/Song (mapper) [Hard].osu")
+```
+
+跑测试：
+
+```bash
+python -m unittest discover -s tests -t . -v
+```
+
 ## 许可
 
 MIT

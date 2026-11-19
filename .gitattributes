@@ -1,0 +1,4 @@
+* text=auto
+
+# .osu files are compared byte-for-byte in tests; keep the fixtures LF
+tests/fixtures/*.osu text eol=lf
