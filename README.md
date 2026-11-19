@@ -22,8 +22,8 @@
 
 | 里程碑 | 内容 |
 |---|---|
-| S1 | `.osu` 读写 + 数据模型 |
-| S2 | 音频分析 + 红线 |
+| S1 ✅ | `.osu` 读写 + 数据模型 |
+| S2 ✅ | 音频分析 + 红线 |
 | S3 | 段落切分 + 密度曲线 |
 | S4 | 节奏生成 |
 | S5 | 几何 + 滑条 |
@@ -35,10 +35,25 @@
 ## 快速开始
 
 ```bash
-python examples/make_minimal.py build   # 生成一张可玩的最小谱面
+# 分析一首歌的 BPM / offset / downbeat，并生成一张 1/1 的"测速图"
+python examples/analyze_audio.py song.mp3 --skeleton
+
+# 生成一张可玩的最小谱面（120 BPM 写死，用于验证格式）
+python examples/make_minimal.py build
 ```
 
-把生成的 `.osu` 连同任意 `song.mp3`、`bg.jpg` 放进 osu! 的 `Songs` 目录，按 `F5` 刷新生效。
+```text
+$ python examples/analyze_audio.py song.mp3 --skeleton
+decoding      demo.wav  (30.0s @ 22050 Hz)
+backend       numpy
+tempo         128.25 BPM  (beat 467.84 ms)
+offset        499.7 ms
+downbeat      beat 0 of the bar
+residual      30.3 ms
+confidence    1.00
+```
+
+把生成的 `.osu` 连同音频、任意 `bg.jpg` 放进 osu! 的 `Songs` 目录，按 `F5` 刷新生效。
 
 读写 API：
 
