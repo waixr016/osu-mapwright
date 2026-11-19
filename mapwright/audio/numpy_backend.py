@@ -20,32 +20,11 @@ from .base import (
     TempoEstimate,
     downbeat_phase,
 )
+from .dsp import flux as _flux
+from .dsp import stft_magnitude as _stft_magnitude
 
 N_FFT = 1024
 HOP = 256
-
-
-def _stft_magnitude(
-    samples: np.ndarray, n_fft: int = N_FFT, hop: int = HOP, chunk: int = 512
-) -> np.ndarray:
-    pad = n_fft // 2
-    padded = np.pad(samples, (pad, pad), mode="reflect")
-    n_frames = 1 + (len(padded) - n_fft) // hop
-    window = np.hanning(n_fft).astype(np.float32)
-    magnitudes = np.empty((n_frames, n_fft // 2 + 1), dtype=np.float32)
-    offsets = np.arange(n_fft)
-    for start in range(0, n_frames, chunk):
-        stop = min(start + chunk, n_frames)
-        indices = np.arange(start, stop)[:, None] * hop + offsets[None, :]
-        magnitudes[start:stop] = np.abs(np.fft.rfft(padded[indices] * window, axis=1))
-    return magnitudes
-
-
-def _flux(magnitudes: np.ndarray) -> np.ndarray:
-    compressed = np.log1p(magnitudes * 10.0)
-    difference = np.diff(compressed, axis=0)
-    flux = np.maximum(difference, 0.0).sum(axis=1)
-    return np.concatenate([[0.0], flux]).astype(np.float32)
 
 
 def _onset_envelope(magnitudes: np.ndarray) -> np.ndarray:

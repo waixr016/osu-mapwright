@@ -90,6 +90,7 @@ def structured_track(
     parts: tuple[tuple[int, float], ...] = ((8, 0.10), (8, 0.40), (8, 1.00), (8, 0.15)),
     sample_rate: int = 22050,
     seed: int = 5,
+    bass_beats: tuple[int, ...] = (0, 1, 2, 3),
 ) -> Path:
     """Music with clear loudness steps, for section-segmentation tests.
 
@@ -138,7 +139,8 @@ def structured_track(
             _add(audio, at(beat), kick_sound if beat_in_bar in (0, 2) else snare_sound)
             _add(audio, at(beat), hat_sound * 0.6)
             _add(audio, at(beat + 0.5), hat_sound)
-            _add(audio, at(beat), tone(root, beat_s * 0.9, 0.5))
+            if beat_in_bar in bass_beats:
+                _add(audio, at(beat), tone(root, beat_s * 0.9, 0.5))
         for ratio in (2.0, 2.52, 3.0):
             _add(audio, at(base), tone(root * ratio, beat_s * 4.0, 0.16))
 
